@@ -10,7 +10,11 @@ An intelligent eBay fashion shopping assistant powered by **Corrective RAG (CRAG
 
 ---
 
-## 🏗️ Architecture
+## 🏗️ Architecture Diagram
+
+![AI Shopping Assistant AWS Architecture](architecture.png)
+
+
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
@@ -277,6 +281,12 @@ uvicorn main:app --reload --port 8000
 
 ## 📝 License
 
-**Apache License 2.0** — Free to use, but modifications must be clearly marked and cannot be redistributed under a different license.
+**All Rights Reserved** — This project is free to view and use for personal/educational purposes only.
 
-Copyright 2026 Imran Rafique
+- ❌ No modifications allowed
+- ❌ No redistribution allowed
+- ❌ No commercial use allowed
+- ✅ Free to view and learn from
+- ✅ Free to use locally for personal projects
+
+Copyright © 2026 Imran Rafique. All rights reserved.
