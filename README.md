@@ -14,59 +14,6 @@ An intelligent eBay fashion shopping assistant powered by **Corrective RAG (CRAG
 
 ![AI Shopping Assistant AWS Architecture](architecture.png)
 
-
-
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                         USER BROWSER                            │
-│                    (Responsive Web UI)                          │
-└──────────────────────────┬──────────────────────────────────────┘
-                           │ HTTP Request
-                           ▼
-┌─────────────────────────────────────────────────────────────────┐
-│              AWS ELASTIC BEANSTALK (EC2 t3.micro)               │
-│                                                                 │
-│  ┌─────────────────────────────────────────────────────────┐   │
-│  │              Docker Container (Python 3.12)              │   │
-│  │                                                         │   │
-│  │  FastAPI Application (main.py)                          │   │
-│  │                                                         │   │
-│  │  ┌─────────────────────────────────────────────────┐   │   │
-│  │  │           CORRECTIVE RAG PIPELINE               │   │   │
-│  │  │                                                 │   │   │
-│  │  │  Step 1: Intent Detection                       │   │   │
-│  │  │  ↓ (greeting vs product search)                │   │   │
-│  │  │                                                 │   │   │
-│  │  │  Step 2: Query Rewriter (Nova Micro)            │   │   │
-│  │  │  ↓ "show me cheap womens dress"                │   │   │
-│  │  │  → "women casual dress affordable low price"   │   │   │
-│  │  │                                                 │   │   │
-│  │  │  Step 3: FAISS Vector Search                    │   │   │
-│  │  │  ↓ (loaded from S3 on startup)                 │   │   │
-│  │  │  → Top 8 relevant products                     │   │   │
-│  │  │                                                 │   │   │
-│  │  │  Step 4: Response Generator (Nova Micro)        │   │   │
-│  │  │  → Brief honest 2-3 sentence response          │   │   │
-│  │  └─────────────────────────────────────────────────┘   │   │
-│  └─────────────────────────────────────────────────────────┘   │
-└──────────────────────────┬──────────────────────────────────────┘
-                           │
-          ┌────────────────┼────────────────┐
-          ▼                ▼                ▼
-┌─────────────┐  ┌─────────────────┐  ┌──────────────┐
-│  Amazon S3  │  │  AWS Bedrock    │  │  Amazon ECR  │
-│             │  │                 │  │              │
-│ faiss_      │  │ Titan Embed V2  │  │ Docker Image │
-│ index.bin   │  │ (Embeddings)    │  │ Repository   │
-│             │  │                 │  │              │
-│ metadata.   │  │ Nova Micro      │  └──────────────┘
-│ json        │  │ (Chat LLM)      │
-│             │  │                 │
-│ ebay_data.  │  └─────────────────┘
-│ json        │
-└─────────────┘
-```
-
 ---
 
 ## 🔧 AWS Services Used
