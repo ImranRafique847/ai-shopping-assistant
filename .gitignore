@@ -1,0 +1,33 @@
+# Environment variables — NEVER commit these
+.env
+*.env
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.venv/
+venv/
+env/
+
+# AWS credentials
+*.pem
+*.key
+
+# Large data files
+data/faiss_index.bin
+data/metadata.json
+lambda_package/
+lambda_package.zip
+lambda_function.py
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log

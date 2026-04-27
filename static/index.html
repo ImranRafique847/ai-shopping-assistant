@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>AI Shopping Assistant</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #f0f2f5;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── Header ── */
+    header {
+      background: #1a1a2e;
+      color: white;
+      padding: 14px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      flex-shrink: 0;
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    header h1 { font-size: 1.2rem; font-weight: 600; }
+    header .logo { font-size: 1.5rem; }
+
+    .new-chat-btn {
+      padding: 7px 16px;
+      background: rgba(255,255,255,0.15);
+      color: white;
+      border: 1px solid rgba(255,255,255,0.3);
+      border-radius: 20px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      font-weight: 500;
+      transition: background 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .new-chat-btn:hover { background: rgba(255,255,255,0.25); }
+
+    /* ── Main feed ── */
+    .feed {
+      flex: 1;
+      overflow-y: auto;
+      padding: 24px 16px 40px;
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      max-width: 1200px;
+      width: 100%;
+      margin: 0 auto;
+    }
+
+    /* ── Turn block (one Q&A + products) ── */
+    .turn {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-bottom: 32px;
+    }
+
+    /* ── Messages ── */
+    .message {
+      display: flex;
+      gap: 10px;
+      max-width: 600px;
+    }
+
+    .message.user {
+      align-self: flex-end;
+      flex-direction: row-reverse;
+    }
+
+    .message.assistant { align-self: flex-start; }
+
+    .avatar {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1rem;
+      flex-shrink: 0;
+    }
+
+    .message.user .avatar { background: #1a1a2e; }
+    .message.assistant .avatar { background: #e8f4fd; }
+
+    .bubble {
+      padding: 10px 16px;
+      border-radius: 18px;
+      line-height: 1.55;
+      font-size: 0.92rem;
+    }
+
+    .message.user .bubble {
+      background: #1a1a2e;
+      color: white;
+      border-bottom-right-radius: 4px;
+    }
+
+    .message.assistant .bubble {
+      background: white;
+      color: #1a1a2e;
+      border-bottom-left-radius: 4px;
+      border: 1px solid #e9ecef;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+    }
+
+    /* ── Product grid inside turn ── */
+    .products-section {
+      width: 100%;
+    }
+
+    .products-section-title {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: #6c757d;
+      margin-bottom: 10px;
+      padding-left: 4px;
+    }
+
+    .products-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+      gap: 14px;
+      padding-bottom: 8px;
+    }
+
+    /* ── Product Card ── */
+    .product-card {
+      background: white;
+      border-radius: 14px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.07);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .product-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.13);
+    }
+
+    .product-img-wrap {
+      width: 100%;
+      height: 190px;
+      overflow: hidden;
+      background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+    }
+
+    .product-img-wrap img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .product-img-placeholder {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 3rem;
+    }
+
+    .product-body {
+      padding: 10px 12px 12px;
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      gap: 5px;
+    }
+
+    .product-name {
+      font-size: 0.83rem;
+      font-weight: 600;
+      color: #1a1a2e;
+      line-height: 1.4;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .product-price {
+      font-size: 1rem;
+      font-weight: 700;
+      color: #e63946;
+    }
+
+    .product-meta-row {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      flex-wrap: wrap;
+    }
+
+    .product-condition {
+      font-size: 0.7rem;
+      padding: 2px 7px;
+      border-radius: 10px;
+      background: #e8f4fd;
+      color: #1971c2;
+      font-weight: 500;
+    }
+
+    .product-category {
+      font-size: 0.7rem;
+      color: #adb5bd;
+    }
+
+    .product-seller {
+      font-size: 0.73rem;
+      color: #868e96;
+    }
+
+    .buy-btn {
+      display: block;
+      width: 100%;
+      padding: 8px;
+      background: #1a1a2e;
+      color: white;
+      text-align: center;
+      border-radius: 8px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      text-decoration: none;
+      margin-top: auto;
+      padding-top: 10px;
+      transition: background 0.2s;
+    }
+
+    .buy-btn:hover { background: #e63946; }
+
+    /* ── Typing indicator ── */
+    .typing-indicator {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      max-width: 600px;
+    }
+
+    .typing-dots {
+      background: white;
+      border: 1px solid #e9ecef;
+      border-radius: 18px;
+      border-bottom-left-radius: 4px;
+      padding: 12px 16px;
+      display: flex;
+      gap: 4px;
+    }
+
+    .typing-dots span {
+      width: 8px; height: 8px;
+      background: #adb5bd;
+      border-radius: 50%;
+      animation: bounce 1.2s infinite;
+    }
+
+    .typing-dots span:nth-child(2) { animation-delay: 0.2s; }
+    .typing-dots span:nth-child(3) { animation-delay: 0.4s; }
+
+    @keyframes bounce {
+      0%, 60%, 100% { transform: translateY(0); }
+      30% { transform: translateY(-6px); }
+    }
+
+    /* ── Input area ── */
+    .input-wrapper {
+      background: white;
+      border-top: 1px solid #e9ecef;
+      padding: 12px 16px;
+      flex-shrink: 0;
+    }
+
+    .input-inner {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .suggestions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .suggestion-btn {
+      padding: 5px 12px;
+      background: #f8f9fa;
+      border: 1px solid #dee2e6;
+      border-radius: 20px;
+      font-size: 0.78rem;
+      cursor: pointer;
+      color: #495057;
+      transition: all 0.2s;
+    }
+
+    .suggestion-btn:hover {
+      background: #1a1a2e;
+      color: white;
+      border-color: #1a1a2e;
+    }
+
+    .input-row {
+      display: flex;
+      gap: 8px;
+    }
+
+    .input-row input {
+      flex: 1;
+      padding: 11px 18px;
+      border: 2px solid #e9ecef;
+      border-radius: 24px;
+      font-size: 0.92rem;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .input-row input:focus { border-color: #1a1a2e; }
+
+    .input-row button {
+      padding: 11px 22px;
+      background: #1a1a2e;
+      color: white;
+      border: none;
+      border-radius: 24px;
+      cursor: pointer;
+      font-size: 0.92rem;
+      font-weight: 600;
+      transition: background 0.2s;
+    }
+
+    .input-row button:hover { background: #16213e; }
+    .input-row button:disabled { background: #adb5bd; cursor: not-allowed; }
+
+    /* ── Responsive ── */
+    @media (max-width: 768px) {
+      .products-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+      }
+      .product-img-wrap { height: 150px; }
+      .feed { padding: 16px 10px; }
+    }
+
+    @media (max-width: 480px) {
+      .products-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+      .message { max-width: 90%; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Header -->
+<header>
+  <div class="header-left">
+    <span class="logo">🛍️</span>
+    <h1>AI Shopping Assistant</h1>
+  </div>
+  <button class="new-chat-btn" onclick="newChat()">✨ New Chat</button>
+</header>
+
+<!-- Feed -->
+<div class="feed" id="feed">
+  <!-- Welcome message -->
+  <div class="turn" id="welcome">
+    <div class="message assistant">
+      <div class="avatar">🤖</div>
+      <div class="bubble">
+        Hi! I'm your AI shopping assistant. I can help you find fashion items from our eBay collection — clothing, shoes, bags and accessories for men, women and kids.<br><br>
+        What are you looking for today?
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Input area -->
+<div class="input-wrapper">
+  <div class="input-inner">
+    <div class="suggestions" id="suggestions">
+      <button class="suggestion-btn" onclick="sendSuggestion(this)">👗 Women's dresses under $50</button>
+      <button class="suggestion-btn" onclick="sendSuggestion(this)">👟 Men's sneakers</button>
+      <button class="suggestion-btn" onclick="sendSuggestion(this)">👜 Handbags</button>
+      <button class="suggestion-btn" onclick="sendSuggestion(this)">🧥 Winter jackets</button>
+      <button class="suggestion-btn" onclick="sendSuggestion(this)">👶 Kids clothing</button>
+    </div>
+    <div class="input-row">
+      <input
+        type="text"
+        id="userInput"
+        placeholder="Ask me anything about fashion..."
+        onkeydown="if(event.key==='Enter') sendMessage()"
+      />
+      <button id="sendBtn" onclick="sendMessage()">Send</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Chat history stored in memory
+  let chatHistory = [];
+
+  async function sendMessage() {
+    const input = document.getElementById('userInput');
+    const msg = input.value.trim();
+    if (!msg) return;
+
+    input.value = '';
+    setLoading(true);
+
+    // Create a new turn block
+    const turn = document.createElement('div');
+    turn.className = 'turn';
+
+    // Add user message
+    turn.appendChild(createMessage('user', msg));
+
+    // Add typing indicator
+    const typingEl = createTyping();
+    turn.appendChild(typingEl);
+
+    document.getElementById('feed').appendChild(turn);
+    scrollToBottom();
+
+    try {
+      const res = await fetch('/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: msg, history: chatHistory })
+      });
+
+      if (!res.ok) throw new Error('Server error');
+      const data = await res.json();
+
+      // Remove typing
+      typingEl.remove();
+
+      // Add assistant message
+      turn.appendChild(createMessage('assistant', data.reply));
+
+      // Add product grid if products exist
+      if (data.products && data.products.length > 0) {
+        turn.appendChild(createProductGrid(data.products));
+      }
+
+      // Save to history
+      chatHistory.push({ role: 'user', content: msg });
+      chatHistory.push({ role: 'assistant', content: data.reply });
+
+      // Keep last 20 turns in memory
+      if (chatHistory.length > 20) chatHistory = chatHistory.slice(-20);
+
+    } catch (err) {
+      typingEl.remove();
+      turn.appendChild(createMessage('assistant', '⚠️ Sorry, something went wrong. Please try again.'));
+    }
+
+    setLoading(false);
+    scrollToBottom();
+  }
+
+  function sendSuggestion(btn) {
+    document.getElementById('userInput').value = btn.textContent.replace(/^[^\w]+/, '').trim();
+    sendMessage();
+  }
+
+  function newChat() {
+    chatHistory = [];
+    const feed = document.getElementById('feed');
+    feed.innerHTML = `
+      <div class="turn" id="welcome">
+        <div class="message assistant">
+          <div class="avatar">🤖</div>
+          <div class="bubble">
+            Hi! I'm your AI shopping assistant. I can help you find fashion items from our eBay collection — clothing, shoes, bags and accessories for men, women and kids.<br><br>
+            What are you looking for today?
+          </div>
+        </div>
+      </div>
+    `;
+    document.getElementById('userInput').focus();
+  }
+
+  function createMessage(role, text) {
+    const div = document.createElement('div');
+    div.className = `message ${role}`;
+    div.innerHTML = `
+      <div class="avatar">${role === 'user' ? '👤' : '🤖'}</div>
+      <div class="bubble">${escapeHtml(text).replace(/\n/g, '<br>').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')}</div>
+    `;
+    return div;
+  }
+
+  function createTyping() {
+    const div = document.createElement('div');
+    div.className = 'typing-indicator';
+    div.innerHTML = `
+      <div class="avatar">🤖</div>
+      <div class="typing-dots"><span></span><span></span><span></span></div>
+    `;
+    return div;
+  }
+
+  function createProductGrid(products) {
+    const display = products.slice(0, 12);
+    const section = document.createElement('div');
+    section.className = 'products-section';
+    section.innerHTML = `
+      <div class="products-section-title">🔍 ${display.length} Products Found</div>
+      <div class="products-grid">
+        ${display.map(p => {
+          const imgUrl = p.image_urls && p.image_urls.length > 0 ? p.image_urls[0] : '';
+          const imgHtml = imgUrl
+            ? `<img src="${escapeHtml(imgUrl)}" alt="${escapeHtml(p.product_name)}" onerror="this.parentElement.innerHTML='<div class=\\'product-img-placeholder\\'>👗</div>'">`
+            : `<div class="product-img-placeholder">👗</div>`;
+          return `
+            <div class="product-card">
+              <div class="product-img-wrap">${imgHtml}</div>
+              <div class="product-body">
+                <div class="product-name">${escapeHtml(p.product_name || 'Product')}</div>
+                <div class="product-price">${escapeHtml(p.price || 'N/A')}</div>
+                <div class="product-meta-row">
+                  ${p.condition ? `<span class="product-condition">${escapeHtml(p.condition)}</span>` : ''}
+                  ${p.category ? `<span class="product-category">${escapeHtml(p.category)}</span>` : ''}
+                </div>
+                ${p.seller_name ? `<div class="product-seller">⭐ ${escapeHtml(p.seller_name)} ${p.seller_feedback_percent ? '· ' + escapeHtml(p.seller_feedback_percent) : ''}</div>` : ''}
+                <a class="buy-btn" href="${escapeHtml(p.product_url || '#')}" target="_blank" rel="noopener">🛒 Buy This</a>
+              </div>
+            </div>
+          `;
+        }).join('')}
+      </div>
+    `;
+    return section;
+  }
+
+  function setLoading(loading) {
+    document.getElementById('sendBtn').disabled = loading;
+    document.getElementById('userInput').disabled = loading;
+  }
+
+  function scrollToBottom() {
+    const feed = document.getElementById('feed');
+    feed.scrollTop = feed.scrollHeight;
+  }
+
+  function escapeHtml(str) {
+    if (!str) return '';
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+</script>
+
+</body>
+</html>
