@@ -277,4 +277,6 @@ uvicorn main:app --reload --port 8000
 
 ## 📝 License
 
-MIT License — free to use and modify.
+**Apache License 2.0** — Free to use, but modifications must be clearly marked and cannot be redistributed under a different license.
+
+Copyright 2026 Imran Rafique
